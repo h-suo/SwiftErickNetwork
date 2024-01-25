@@ -2,7 +2,10 @@
 
 > You can easily network using the SwiftErickNetwork package.
 > 
-> `iOS 13.0+` `macOS 10.15+` 
+> [![iOSVersion](https://img.shields.io/badge/iOS-13.0+-lightgray)]()
+> [![macOSVersion](https://img.shields.io/badge/macOS-10.15+-lightgray)]()
+> [![Platforms](https://img.shields.io/badge/Platforms-iOS_|_macOS-red)]()
+> [![SwiftSPM](https://img.shields.io/badge/SPM-supported-DE5C43.svg?style=flat)](https://swift.org/package-manager/)
 
 <br>
 
