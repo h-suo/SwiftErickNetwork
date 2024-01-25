@@ -4,6 +4,8 @@
 > 
 > `iOS 13.0+` `macOS 10.15+` 
 
+<br>
+
 ## Overview
 
 **SwiftErickNetwork** provides a blueprint called **NetworkConfigurable** to easily create EndPoints and offers a **NetworkManager** to facilitate networking and decoding tasks seamlessly.
