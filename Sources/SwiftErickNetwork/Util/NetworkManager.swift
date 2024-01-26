@@ -12,7 +12,7 @@ open class NetworkManager: NetworkManageable {
     
     public var urlSession: URLSessionProtocol
     
-    init(urlSession: URLSessionProtocol) {
+    public init(urlSession: URLSessionProtocol) {
         self.urlSession = urlSession
     }
     
