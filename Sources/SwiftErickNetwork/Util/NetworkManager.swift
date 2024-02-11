@@ -125,7 +125,7 @@ open class NetworkManager: NetworkManageable {
             
             return .success(decoded)
         } catch {
-            return .failure(NetworkError.emptyData)
+            return .failure(NetworkError.dataConversionFailed)
         }
     }
     

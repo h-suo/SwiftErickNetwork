@@ -13,18 +13,24 @@ struct StubEndPoint: NetworkConfigurable {
     
     var baseURL: String
     var path: String
-    var method: SwiftErickNetwork.HttpMethod
+    var httpMethod: HttpMethod
     var queryParameters: [URLQueryItem]?
+    var httpHeaderFields: [String : String]?
+    var httpBody: Encodable?
     
     init(
         baseURL: String = "https://example.com",
         path: String = "/api/data",
-        method: SwiftErickNetwork.HttpMethod = .get,
-        queryParameters: [URLQueryItem]? = nil
+        httpMethod: HttpMethod = .get,
+        queryParameters: [URLQueryItem]? = nil,
+        httpHeaderFields: [String: String]? = nil,
+        httpBody: Encodable? = nil
     ) {
         self.baseURL = baseURL
         self.path = path
-        self.method = method
+        self.httpMethod = httpMethod
         self.queryParameters = queryParameters
+        self.httpHeaderFields = httpHeaderFields
+        self.httpBody = httpBody
     }
 }

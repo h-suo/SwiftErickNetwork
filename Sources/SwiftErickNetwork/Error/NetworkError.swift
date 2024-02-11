@@ -13,6 +13,7 @@ public enum NetworkError: LocalizedError {
     case invalidResponse
     case statusCodeOutOfRange
     case emptyData
+    case dataConversionFailed
     case dataTask(Error)
     case urlRequest(Error)
     
@@ -28,6 +29,8 @@ public enum NetworkError: LocalizedError {
             return "The state code is not in success range."
         case .emptyData:
             return "Data is empty."
+        case .dataConversionFailed:
+            return "Data conversion failed."
         case .dataTask(let error):
             return "The following error occurred in dataTask.: \(error.localizedDescription) "
         case .urlRequest(let error):
@@ -48,7 +51,8 @@ extension NetworkError: Equatable {
             (.invalidComponents, .invalidComponents),
             (.invalidResponse, .invalidResponse),
             (.statusCodeOutOfRange, .statusCodeOutOfRange),
-            (.emptyData, .emptyData):
+            (.emptyData, .emptyData),
+            (.dataConversionFailed, .dataConversionFailed):
             return true
         case let (.dataTask(error1), .dataTask(error2)),
             let (.urlRequest(error1), .urlRequest(error2)):

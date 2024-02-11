@@ -13,8 +13,10 @@ public protocol NetworkConfigurable {
     
     var baseURL: String { get }
     var path: String { get }
-    var method: HttpMethod { get }
     var queryParameters: [URLQueryItem]? { get }
+    var httpMethod: HttpMethod { get }
+    var httpHeaderFields: [String: String]? { get }
+    var httpBody: Encodable? { get }
 }
 
 extension NetworkConfigurable {
@@ -23,7 +25,23 @@ extension NetworkConfigurable {
         let url = try url()
         var urlRequest = URLRequest(url: url)
         
-        urlRequest.httpMethod = method.rawValue
+        urlRequest.httpMethod = httpMethod.rawValue
+        
+        guard let httpHeaderFields
+        else { return urlRequest }
+        
+        httpHeaderFields.forEach { key, value in
+            urlRequest.setValue(key, forHTTPHeaderField: value)
+        }
+        
+        guard let httpBody
+        else { return urlRequest }
+        
+        do {
+            urlRequest.httpBody = try JSONEncoder().encode(httpBody)
+        } catch {
+            throw NetworkError.dataConversionFailed
+        }
         
         return urlRequest
     }
