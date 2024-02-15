@@ -26,8 +26,10 @@ public protocol NetworkConfigurable {
     
     var baseURL: String { get }
     var path: String { get }
-    var method: HttpMethod { get }
     var queryParameters: [URLQueryItem]? { get }
+    var httpMethod: HttpMethod { get }
+    var httpHeaderFields: [String: String]? { get }
+    var httpBody: Encodable? { get }
 }
 ```
 
