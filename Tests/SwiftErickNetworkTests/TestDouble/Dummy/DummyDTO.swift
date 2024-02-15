@@ -5,7 +5,7 @@
 //  Created by Erick on 2024/01/25.
 //
 
-struct DummyDTO: Decodable {
+struct DummyDTO: Codable, Equatable {
     let id: Int
     let title: String
 }
