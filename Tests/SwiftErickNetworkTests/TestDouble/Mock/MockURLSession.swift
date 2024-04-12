@@ -13,10 +13,16 @@ class MockURLSession: URLSessionProtocol {
     
     var response: DummyResponse?
     var combineResponse: DummyCombineResponse?
+    var asyncResponse: DummyAsyncResponse?
     
-    init(response: DummyResponse? = nil, combineResponse: DummyCombineResponse? = nil) {
+    init(
+        response: DummyResponse? = nil,
+        combineResponse: DummyCombineResponse? = nil,
+        asyncResponse: DummyAsyncResponse? = nil
+    ) {
         self.response = response
         self.combineResponse = combineResponse
+        self.asyncResponse = asyncResponse
     }
     
     func dataTask(
@@ -49,6 +55,14 @@ class MockURLSession: URLSessionProtocol {
         return Just((data: combineResponse!.data, response: combineResponse!.response))
             .setFailureType(to: URLError.self)
             .eraseToAnyPublisher()
+    }
+    
+    func dataTask(with request: URLRequest) async throws -> (Data, URLResponse) {
+        return (asyncResponse!.data, asyncResponse!.response)
+    }
+    
+    func dataTask(with url: URL) async throws -> (Data, URLResponse) {
+        return (asyncResponse!.data, asyncResponse!.response)
     }
 }
 

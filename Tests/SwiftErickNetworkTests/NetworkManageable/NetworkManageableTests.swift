@@ -68,7 +68,9 @@ class NetworkManageableTests: XCTestCase {
         
         networkManager = NetworkManager(
             urlSession: MockURLSession(
-                combineResponse: SuccessCombineResponse()))
+                combineResponse: SuccessCombineResponse()
+            )
+        )
         
         // when
         let _ = networkManager.requestPublisher(with: URL(string: "success")!)
@@ -94,7 +96,9 @@ class NetworkManageableTests: XCTestCase {
         let endPoint = StubEndPoint()
         networkManager = NetworkManager(
             urlSession: MockURLSession(
-                combineResponse: SuccessCombineResponse()))
+                combineResponse: SuccessCombineResponse()
+            )
+        )
         
         // when
         let _ = networkManager.requestPublisher(with: endPoint)
@@ -110,6 +114,57 @@ class NetworkManageableTests: XCTestCase {
         // then
         wait(for: [expectation], timeout: 0.5)
         XCTAssertNotNil(resultData)
+    }
+    
+    func test_success_async_request_with_url() async {
+        // given
+        let expectation = XCTestExpectation(description: "success async request with url")
+
+        networkManager = NetworkManager(
+            urlSession: MockURLSession(
+                asyncResponse: SuccessAsyncResponse()
+            )
+        )
+
+        // when
+        let result = await networkManager.request(with: URL(string: "success")!)
+        
+        switch result {
+        case let .success(data):
+            // then
+            expectation.fulfill()
+            XCTAssertNotNil(data)
+        case let .failure(error):
+            XCTFail(error.localizedDescription)
+        }
+        
+        await fulfillment(of: [expectation], timeout: 0.5)
+    }
+    
+    func test_success_async_request_with_EndPoint() async {
+        // given
+        let expectation = XCTestExpectation(description: "success async request with EndPoint")
+        
+        let endPoint = StubEndPoint()
+        networkManager = NetworkManager(
+            urlSession: MockURLSession(
+                asyncResponse: SuccessAsyncResponse()
+            )
+        )
+        
+        // when
+        let result = await networkManager.request(with: endPoint)
+
+        switch result {
+        case let .success(data):
+            // then
+            expectation.fulfill()
+            XCTAssertNotNil(data)
+        case let .failure(error):
+            XCTFail(error.localizedDescription)
+        }
+        
+        await fulfillment(of: [expectation], timeout: 0.5)
     }
     
     // MARK: - Failde Test Cases
@@ -157,6 +212,22 @@ class NetworkManageableTests: XCTestCase {
         testFailureWithCombine(
             description: "Failed with invalidResponse Error",
             failResponse: StatusCodeOutOfRangeCombineResponse(),
+            networkError: NetworkError.statusCodeOutOfRange
+        )
+    }
+    
+    func test_failure_invalidResponse_with_concurrency() async {
+        await testFailureWithConcurrency(
+            description: "Failed with invalidResponse Error",
+            failResponse: InvalidAsyncResponse(),
+            networkError: NetworkError.invalidResponse
+        )
+    }
+    
+    func test_failure_statusCodeOutOfRange_with_concurrency() async {
+        await testFailureWithConcurrency(
+            description: "Failed with invalidResponse Error",
+            failResponse: StatusCodeOutOfRangeAsyncResponse(),
             networkError: NetworkError.statusCodeOutOfRange
         )
     }
@@ -219,5 +290,31 @@ class NetworkManageableTests: XCTestCase {
         // then
         wait(for: [expectation], timeout: 0.5)
         XCTAssertEqual(resultError, networkError)
+    }
+    
+    private func testFailureWithConcurrency(
+        description: String,
+        failResponse: DummyAsyncResponse,
+        networkError: NetworkError
+    ) async {
+        // given
+        let expectation = XCTestExpectation(description: description)
+        let endPoint = StubEndPoint()
+        networkManager = NetworkManager(urlSession: MockURLSession(asyncResponse: failResponse))
+        
+        // when
+        let result = await networkManager.request(with: endPoint)
+
+        switch result {
+        case .success(_):
+            // then
+            XCTFail("Failed test failed.")
+        case let .failure(error):
+            // then
+            expectation.fulfill()
+            XCTAssertEqual(error, networkError)
+        }
+        
+        await fulfillment(of: [expectation], timeout: 0.5)
     }
 }
