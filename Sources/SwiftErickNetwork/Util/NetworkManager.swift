@@ -8,14 +8,81 @@
 import Combine
 import Foundation
 
-open class NetworkManager: NetworkManageable {
+open class NetworkManager {
     
     public var urlSession: URLSessionProtocol
     
     public init(urlSession: URLSessionProtocol = URLSession.shared) {
         self.urlSession = urlSession
     }
+}
+
+extension NetworkManager {
     
+    private func checkError(
+        with data: Data?,
+        _ response: URLResponse?,
+        _ error: Error?,
+        completion: @escaping (Result<Data, NetworkError>) -> Void
+    ) {
+        
+        if let error = error {
+            completion(.failure(NetworkError.dataTask(error)))
+            return
+        }
+        
+        guard let response = response as? HTTPURLResponse else {
+            completion(.failure(NetworkError.invalidResponse))
+            return
+        }
+        
+        guard (200...299).contains(response.statusCode) else {
+            completion(.failure(NetworkError.statusCodeOutOfRange))
+            return
+        }
+        
+        guard let data = data else {
+            completion(.failure(NetworkError.emptyData))
+            return
+        }
+        
+        completion(.success((data)))
+    }
+    
+    private func decode<DTO: Decodable>(data: Data) -> Result<DTO, NetworkError> {
+        
+        do {
+            let decoded = try JSONDecoder().decode(DTO.self, from: data)
+            
+            return .success(decoded)
+        } catch {
+            return .failure(NetworkError.dataConversionFailed)
+        }
+    }
+    
+    private func processDataTask(
+        with data: Data,
+        _ response: URLResponse
+    ) throws -> Data {
+        guard let httpResponse = response as? HTTPURLResponse
+        else { throw NetworkError.invalidResponse }
+        
+        guard (200...299).contains(httpResponse.statusCode)
+        else { throw NetworkError.statusCodeOutOfRange }
+        
+        return data
+    }
+    
+    private func processError(with error: Error) -> NetworkError {
+        if let networkError = error as? NetworkError {
+            return networkError
+        } else {
+            return NetworkError.dataTask(error)
+        }
+    }
+}
+    
+extension NetworkManager: NetworkManageable {
     public func request<DTO: Decodable, EndPoint: NetworkConfigurable>(
         with endpoint: EndPoint,
         completion: @escaping (Result<DTO, NetworkError>) -> Void
@@ -88,65 +155,27 @@ open class NetworkManager: NetworkManageable {
             .eraseToAnyPublisher()
     }
     
-    private func checkError(
-        with data: Data?,
-        _ response: URLResponse?,
-        _ error: Error?,
-        completion: @escaping (Result<Data, NetworkError>) -> Void
-    ) {
-        
-        if let error = error {
-            completion(.failure(NetworkError.dataTask(error)))
-            return
-        }
-        
-        guard let response = response as? HTTPURLResponse else {
-            completion(.failure(NetworkError.invalidResponse))
-            return
-        }
-        
-        guard (200...299).contains(response.statusCode) else {
-            completion(.failure(NetworkError.statusCodeOutOfRange))
-            return
-        }
-        
-        guard let data = data else {
-            completion(.failure(NetworkError.emptyData))
-            return
-        }
-        
-        completion(.success((data)))
-    }
-    
-    private func decode<DTO: Decodable>(data: Data) -> Result<DTO, NetworkError> {
-        
+    public func request<DTO, EndPoint>(
+        with endpoint: EndPoint
+    ) async -> Result<DTO, NetworkError>
+    where DTO : Decodable, DTO == EndPoint.Response, EndPoint : NetworkConfigurable {
         do {
-            let decoded = try JSONDecoder().decode(DTO.self, from: data)
-            
-            return .success(decoded)
+            let request = try endpoint.urlRequest()
+            let result = try await urlSession.dataTask(with: request)
+            let data = try processDataTask(with: result.0, result.1)
+            return decode(data: data)
         } catch {
-            return .failure(NetworkError.dataConversionFailed)
+            return .failure(processError(with: error))
         }
     }
     
-    private func processDataTask(
-        with data: Data,
-        _ response: URLResponse
-    ) throws -> Data {
-        guard let httpResponse = response as? HTTPURLResponse
-        else { throw NetworkError.invalidResponse }
-        
-        guard (200...299).contains(httpResponse.statusCode)
-        else { throw NetworkError.statusCodeOutOfRange }
-        
-        return data
-    }
-    
-    private func processError(with error: Error) -> NetworkError {
-        if let networkError = error as? NetworkError {
-            return networkError
-        } else {
-            return NetworkError.dataTask(error)
+    public func request(with url: URL) async -> Result<Data, NetworkError> {
+        do {
+            let result = try await urlSession.dataTask(with: url)
+            let data = try processDataTask(with: result.0, result.1)
+            return .success(data)
+        } catch {
+            return .failure(processError(with: error))
         }
     }
 }

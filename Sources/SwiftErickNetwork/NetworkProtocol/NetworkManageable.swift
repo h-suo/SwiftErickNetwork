@@ -27,4 +27,12 @@ public protocol NetworkManageable {
     ) -> AnyPublisher<DTO, NetworkError> where EndPoint.Response == DTO
     
     func requestPublisher(with url: URL) -> AnyPublisher<Data, NetworkError>
+    
+    func request<DTO: Decodable, EndPoint: NetworkConfigurable>(
+        with endpoint: EndPoint
+    ) async -> Result<DTO, NetworkError> where EndPoint.Response == DTO
+    
+    func request(
+        with url: URL
+    ) async  -> Result<Data, NetworkError>
 }

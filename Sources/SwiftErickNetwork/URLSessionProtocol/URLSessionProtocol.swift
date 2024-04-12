@@ -23,6 +23,9 @@ public protocol URLSessionProtocol {
     
     func responsePublisher(for request: URLRequest) -> AnyPublisher<Response, URLError>
     func responsePublisher(for url: URL) -> AnyPublisher<Response, URLError>
+    
+    func dataTask(with request: URLRequest) async throws -> (Data, URLResponse)
+    func dataTask(with url: URL) async throws -> (Data, URLResponse)
 }
 
 extension URLSession: URLSessionProtocol {
@@ -41,5 +44,13 @@ extension URLSession: URLSessionProtocol {
     
     public func responsePublisher(for url: URL) -> AnyPublisher<Response, URLError> {
         return dataTaskPublisher(for: url).eraseToAnyPublisher()
+    }
+    
+    public func dataTask(with request: URLRequest) async throws -> (Data, URLResponse) {
+        return try await data(for: request)
+    }
+    
+    public func dataTask(with url: URL) async throws -> (Data, URLResponse) {
+        return try await data(from: url)
     }
 }
