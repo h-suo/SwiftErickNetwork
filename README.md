@@ -38,7 +38,7 @@ public protocol NetworkConfigurable {
 **NetworkManager** facilitates networking and decoding effortlessly using either a URL or an EndPoint. 
 When performing networking with an EndPoint, it returns decoded data using the Response type specified by the EndPoint.
 
-Moreover, it provides the `requestPublisher(with:)` function, enabling asynchronous processing with Combine.
+Moreover, it provides the `requestPublisher(with:)` function and `request(with:) async` function, empowering asynchronous processing with both Combine and concurrency.
 
 ```swift
 public protocol NetworkManageable {
@@ -60,5 +60,11 @@ public protocol NetworkManageable {
     ) -> AnyPublisher<DTO, NetworkError> where EndPoint.Response == DTO
     
     func requestPublisher(with url: URL) -> AnyPublisher<Data, NetworkError>
+
+    func request<DTO: Decodable, EndPoint: NetworkConfigurable>(
+        with endpoint: EndPoint
+    ) async -> Result<DTO, NetworkError> where EndPoint.Response == DTO
+    
+    func request(with url: URL) async  -> Result<Data, NetworkError>
 }
 ```
